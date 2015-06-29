@@ -24,7 +24,20 @@ app.get('/', function(request, response) {
     for(i=0;i<times;i++)
         result+=cool();
 
-  response.send(result);
+    client.authrep({ app_id: appId, app_key:appKey }, function(response){
+    result = "Authotritzation+Report3";
+    result = response;
+
+    
+
+        if(response.is_success()) {
+        response.send(result);
+        } else {
+            response.send("not authorized " + response.error_message);
+      }
+    });
+
+  
 });
 
 app.listen(app.get('port'), function() {
@@ -38,6 +51,7 @@ client = new Client(providerKey);
 var ThreeScale = require('3scale').Client;
 // keep your provider key secret
 var client = new ThreeScale("f42a758238b9927407aeaddd5018b3ff");
+
 
 client.authrep({ app_id: appId, app_key:appKey }, function(response){
     console.log("Authotritzation+Report2");
