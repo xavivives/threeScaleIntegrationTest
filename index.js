@@ -1,11 +1,11 @@
 var express = require('express');
 var app = express();
 var cool = require ('cool-ascii-faces');
+var http = require("http");
 var Client = require('3scale').Client;
 var providerKey = process.env.THREESCALE_PROVIDER_KEY;
 var appId =  "455a116e";
 //var appKey =  "6ae0f31679ab02db77573829ff43e1ed";
-var http = require("http");
 
 app.set('port', (process.env.PORT || 5000));
 app.use(express.static(__dirname + '/public'));
@@ -16,32 +16,30 @@ client = new Client(providerKey);
 var ThreeScale = require('3scale').Client;
 var client = new ThreeScale("f42a758238b9927407aeaddd5018b3ff");
 
-/*app.get('/', function(request, response) {
-  response.render('pages/index')
-});*/
+var errorImg = "http://33.media.tumblr.com/tumblr_m15vecveRC1rs2heko1_500.gif";
+var suggestionTags= ["stupid-dog","sandwitch", "sugar", "apple", "back-stree-boys", "teletubies", "unicorn"];
 
 app.listen(app.get('port'), function() {
   //console.log('Node app is running on port', app.get('port'));
 });
 
+app.get('/', function(request, response) {
+  response.render('Try to load /getStuff instead');
+});
 
 app.get('/getStuff', function(request, response) {
-    var errorImg = "http://33.media.tumblr.com/tumblr_m15vecveRC1rs2heko1_500.gif";
     var appKey = request.query.appKey;
     var tag = request.query.tag;
     var message = "Yeah!<br>Here you've got your "+tag+"!<br>Click for more awesomeness.";
     if(!tag)
     {
         tag ="galaxy-cat";
-        var message = "Good job!<br>Here you've got some galaxy cats!<br>If you hate kitties you can try to add this at the end of the url: &tag=stupid-dog" ;
+        var message = "Good job!<br>Here you've got an outer space cat!<br>If you hate kitties you can try to add this at the end of the url: &tag="+getSuggestionTag()+", or anything else you love..." ;
     }
-
-    console.log("appKey:");
-    console.log(appKey);
 
     if(!appKey)
     {
-        response.send(render("Oops. We need your appKey!</br> Try to add an appKey parameter to the url"), null, false);
+        response.send(render("Oops!. We need your appKey!</br> Try to add an appKey parameter to the url: ?appKey=1234", errorImg, false));
         return;
     }
 
@@ -49,7 +47,7 @@ app.get('/getStuff', function(request, response) {
     {
         if(!isAllowed)
         {
-            response.send(render("Almost! Your appKey doesn't seems to be right!</br> You can try this super secret one: 6ae0f31679ab02db77573829ff43e1ed"),null,false);
+            response.send(render("Almost! Your appKey doesn't seems to be right!</br> You can try this super secret one: 6ae0f31679ab02db77573829ff43e1ed",errorImg,false));
             return;
         }
         else
@@ -77,11 +75,6 @@ app.get('/getStuff', function(request, response) {
     
 });
 
-var getGif = function ()
-{
-
-}
-
 var authorize = function(appKey, callback)
 {
     client.authrep({ app_id: appId, app_key:appKey }, function(response){
@@ -107,5 +100,10 @@ var render = function (message, imgUrl, reloadOnClick)
     var script = "";
     if(reloadOnClick)
         script = "document.onclick= function(event) {window.location.reload();}"
-    return ("<!DOCTYPE html><html style='background: url("+imgUrl+") no-repeat center center fixed;    -webkit-background-size: cover;   -moz-background-size: cover;   -o-background-size: cover;   background-size: cover;'> <script> "+script+"</script><head><title>3scale rocks!</title></head><body>"+message+"</body></html>");
+    return ("<!DOCTYPE html><html style='background: url("+imgUrl+") no-repeat center center fixed;    -webkit-background-size: cover;   -moz-background-size: cover;   -o-background-size: cover;   background-size: cover; color: white; font-size: 25px; font-family: monospace; text-align: center;'> <script> "+script+"</script><head><title>3scale rocks!</title></head><body>"+message+"</body></html>");
+}
+
+var getSuggestionTag = function()
+{
+    return suggestionTags[Math.round(Math.random()*(suggestionTags.length-1))];
 }
