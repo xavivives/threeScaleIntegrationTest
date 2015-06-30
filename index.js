@@ -1,6 +1,5 @@
 var express = require('express');
 var app = express();
-var cool = require ('cool-ascii-faces');
 var http = require("http");
 var Client = require('3scale').Client;
 var providerKey = process.env.THREESCALE_PROVIDER_KEY;
@@ -9,8 +8,6 @@ var appId =  "455a116e";
 
 app.set('port', (process.env.PORT || 5000));
 app.use(express.static(__dirname + '/public'));
-app.set('views', __dirname + '/views');
-app.set('view engine', 'ejs');
 
 client = new Client(providerKey);
 var ThreeScale = require('3scale').Client;
@@ -23,11 +20,8 @@ app.listen(app.get('port'), function() {
   //console.log('Node app is running on port', app.get('port'));
 });
 
-app.get('/', function(request, response) {
-  response.render('Try to load /getStuff instead');
-});
 
-app.get('/getStuff', function(request, response) {
+app.get('/', function(request, response) {
     var appKey = request.query.appKey;
     var tag = request.query.tag;
     var message = "Yeah!<br>Here you've got your "+tag+"!<br>Click for more awesomeness.";
