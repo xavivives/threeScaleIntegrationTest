@@ -14,12 +14,11 @@ var ThreeScale = require('3scale').Client;
 var client = new ThreeScale("f42a758238b9927407aeaddd5018b3ff");
 
 var errorImg = "http://33.media.tumblr.com/tumblr_m15vecveRC1rs2heko1_500.gif";
-var suggestionTags= ["stupid-dog","sandwitch", "sugar", "apple", "back-stree-boys", "teletubies", "unicorn"];
+var suggestionTags= ["stupid-dog","sandwitch", "sugar", "apple", "teletubies", "unicorn"];
 
 app.listen(app.get('port'), function() {
   //console.log('Node app is running on port', app.get('port'));
 });
-
 
 app.get('/', function(request, response) {
     var appKey = request.query.appKey;
@@ -63,20 +62,16 @@ app.get('/', function(request, response) {
                 })
             });
         } 
-
-    });
-
-    
+    });    
 });
 
 var authorize = function(appKey, callback)
 {
     client.authrep({ app_id: appId, app_key:appKey }, function(response){
-        if(response.is_success()) {
+        if(response.is_success())
             callback(true);
-        } else {
+        else
             callback(false);
-        }
     });
 }
 
