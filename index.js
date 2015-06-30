@@ -4,61 +4,108 @@ var cool = require ('cool-ascii-faces');
 var Client = require('3scale').Client;
 var providerKey = process.env.THREESCALE_PROVIDER_KEY;
 var appId =  "455a116e";
-var appKey =  "6ae0f31679ab02db77573829ff43e1ed";
+//var appKey =  "6ae0f31679ab02db77573829ff43e1ed";
+var http = require("http");
 
 app.set('port', (process.env.PORT || 5000));
-
 app.use(express.static(__dirname + '/public'));
-
-// views is directory for all template files
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
+
+client = new Client(providerKey);
+var ThreeScale = require('3scale').Client;
+var client = new ThreeScale("f42a758238b9927407aeaddd5018b3ff");
 
 /*app.get('/', function(request, response) {
   response.render('pages/index')
 });*/
 
-app.get('/', function(request, response) {
-    var result = "";
-    var times = process.env.TIMES ||5;
-    for(i=0;i<times;i++)
-        result+=cool();
-
-    client.authrep({ app_id: appId, app_key:appKey }, function(response){
-    result = "Authotritzation+Report3";
-    result = response;
-
-    
-
-        if(response.is_success()) {
-        response.send(result);
-        } else {
-            response.send("not authorized " + response.error_message);
-      }
-    });
-
-  
-});
-
 app.listen(app.get('port'), function() {
   //console.log('Node app is running on port', app.get('port'));
 });
 
-//3scale
 
-client = new Client(providerKey);
+app.get('/getStuff', function(request, response) {
+    var errorImg = "http://33.media.tumblr.com/tumblr_m15vecveRC1rs2heko1_500.gif";
+    var appKey = request.query.appKey;
+    var tag = request.query.tag;
+    var message = "Yeah!<br>Here you've got your "+tag+"!<br>Click for more awesomeness.";
+    if(!tag)
+    {
+        tag ="galaxy-cat";
+        var message = "Good job!<br>Here you've got some galaxy cats!<br>If you hate kitties you can try to add this at the end of the url: &tag=stupid-dog" ;
+    }
 
-var ThreeScale = require('3scale').Client;
-// keep your provider key secret
-var client = new ThreeScale("f42a758238b9927407aeaddd5018b3ff");
+    console.log("appKey:");
+    console.log(appKey);
 
+    if(!appKey)
+    {
+        response.send(render("Oops. We need your appKey!</br> Try to add an appKey parameter to the url"), null, false);
+        return;
+    }
 
-client.authrep({ app_id: appId, app_key:appKey }, function(response){
-    console.log("Authotritzation+Report2");
-    console.log(response);
-  if(response.is_success()) {
-    console.log("success");
-  } else {
-    throw new Error("not authorized " + response.error_message);
-  }
+    authorize(appKey, function(isAllowed)
+    {
+        if(!isAllowed)
+        {
+            response.send(render("Almost! Your appKey doesn't seems to be right!</br> You can try this super secret one: 6ae0f31679ab02db77573829ff43e1ed"),null,false);
+            return;
+        }
+        else
+        {
+            var giphyRequestOptions = {
+                host: 'api.giphy.com',
+                path: '/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag='+tag
+            };
+
+            var req = http.get(giphyRequestOptions, function(res) {
+                var bodyChunks = [];
+                res.on('data', function(chunk) {
+                    bodyChunks.push(chunk);
+
+                }).on('end', function() {
+                    var body = Buffer.concat(bodyChunks);
+                    imgUrl= getImgUrl(body);
+                    response.send(render(message,imgUrl,true));
+                })
+            });
+        } 
+
+    });
+
+    
 });
+
+var getGif = function ()
+{
+
+}
+
+var authorize = function(appKey, callback)
+{
+    client.authrep({ app_id: appId, app_key:appKey }, function(response){
+        if(response.is_success()) {
+            callback(true);
+        } else {
+            callback(false);
+        }
+    });
+}
+
+var getImgUrl = function(jsonText)
+{
+    var obj = JSON.parse(jsonText);
+    if(obj.meta.status == "200")
+        return obj.data.image_original_url;
+    else
+        return errorImg;
+}
+
+var render = function (message, imgUrl, reloadOnClick)
+{
+    var script = "";
+    if(reloadOnClick)
+        script = "document.onclick= function(event) {window.location.reload();}"
+    return ("<!DOCTYPE html><html style='background: url("+imgUrl+") no-repeat center center fixed;    -webkit-background-size: cover;   -moz-background-size: cover;   -o-background-size: cover;   background-size: cover;'> <script> "+script+"</script><head><title>3scale rocks!</title></head><body>"+message+"</body></html>");
+}
